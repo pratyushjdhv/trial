@@ -1,11 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import Swal from 'sweetalert2' // Import the new library
 
 const props = defineProps(['question', 'userId'])
 const emit = defineEmits(['back'])
 
-// Updated default code with Function Template
 const userCode = ref('def solve(n):\n    # Write your logic here\n    return n')
 const probeInput = ref('')
 const probeHistory = ref([])
@@ -13,39 +13,29 @@ const probesLeft = ref(props.question.max_probes)
 const submitLogs = ref([])
 const submitStatus = ref('')
 
-// --- NEW: Load History on Mount ---
 const loadProgress = async () => {
     try {
-        // Remember to use your LAN IP here if deploying!
         const res = await axios.post('http://127.0.0.1:5000/get_progress', {
             user_id: props.userId,
             question_id: props.question.id
         })
-
         probeHistory.value = res.data.history
         probesLeft.value = props.question.max_probes - res.data.probes_used
-
     } catch (err) {
         console.error("Could not load progress")
     }
 }
 
-onMounted(() => {
-    loadProgress()
-})
+onMounted(() => { loadProgress() })
 
-// --- NEW: Handle Tab Key ---
 const handleTab = (event) => {
     const textarea = event.target
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
-    // Insert 4 spaces
     userCode.value = userCode.value.substring(0, start) + "    " + userCode.value.substring(end)
-    // Move cursor
     setTimeout(() => textarea.selectionStart = textarea.selectionEnd = start + 4, 0)
 }
 
-// --- LOGIC MOVED HERE ---
 const sendProbe = async () => {
     if (!probeInput.value) return
     try {
@@ -58,29 +48,69 @@ const sendProbe = async () => {
         probesLeft.value = res.data.probes_left
         probeInput.value = ''
     } catch (err) {
-        alert(err.response?.data?.error || "Probe Failed")
+        // Nice error popup
+        Swal.fire({
+            icon: 'error',
+            title: 'Probe Failed',
+            text: err.response?.data?.error || "Unknown Error",
+            background: '#222',
+            color: '#fff'
+        })
     }
 }
 
 const submitCode = async () => {
     submitStatus.value = 'loading'
     submitLogs.value = []
+    
     try {
         const res = await axios.post('http://127.0.0.1:5000/submit', {
             user_id: props.userId,
             question_id: props.question.id,
             code: userCode.value
         })
+
         submitLogs.value = res.data.details
+        
         if (res.data.solved) {
             submitStatus.value = 'success'
-            alert(`🎉 CORRECT! You earned ${res.data.score_added} points!`)
+            // 🎉 BEAUTIFUL SUCCESS POPUP
+            Swal.fire({
+                icon: 'success',
+                title: 'MISSION ACCOMPLISHED',
+                html: `
+                    <p>You passed <b>${res.data.total_tests}/${res.data.total_tests}</b> test cases.</p>
+                    <p style="font-size: 1.2em; color: #0f0">Score Added: +${res.data.score_added}</p>
+                `,
+                background: '#1a1a1a',
+                color: '#fff',
+                confirmButtonColor: '#008000'
+            })
         } else {
             submitStatus.value = 'fail'
+            // ⚠️ NICE FAILURE POPUP
+            Swal.fire({
+                icon: 'warning',
+                title: 'Partial Success',
+                html: `
+                    <p>Passed: <b>${res.data.tests_passed}/${res.data.total_tests}</b> tests.</p>
+                    <p>Keep hacking. You earned partial points.</p>
+                `,
+                background: '#1a1a1a',
+                color: '#fff',
+                confirmButtonColor: '#d33'
+            })
         }
+
     } catch (err) {
         submitStatus.value = 'error'
-        alert("Error: " + (err.response?.data?.error || err.message))
+        Swal.fire({
+            icon: 'error',
+            title: 'Execution Error',
+            text: err.response?.data?.error || err.message,
+            background: '#222',
+            color: '#fff'
+        })
     }
 }
 </script>

@@ -127,8 +127,6 @@ def probe():
 
 
 # --- NEW: SUBMIT ROUTE (Runs User Code in Docker) ---
-# backend/routes.py
-
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.json
@@ -151,7 +149,7 @@ def submit():
 
     for test_val in test_cases:
         expected = config['func'](test_val)
-        actual = run_docker(user_code, test_val) # Run in Docker
+        actual = run_docker(user_code, test_val)
 
         if str(actual).strip() == str(expected).strip():
             passed_count += 1
@@ -163,61 +161,61 @@ def submit():
     user = User.query.get(user_id)
     progress = UserProgress.query.filter_by(user_id=user_id, question_id=question_id).first()
 
-    # Initialize progress if it doesn't exist (Crucial for first submit)
     if not progress:
         progress = UserProgress(
             user_id=user_id, 
             question_id=question_id, 
             probes_used=0, 
-            tests_passed=0, # Default to 0
+            tests_passed=0,
             is_solved=False
         )
         db.session.add(progress)
 
     score_change = 0
     
-    # CHECK: Did they improve? (Passed more tests than before)
+    # CHECK: Did they improve their previous best?
+    # We update 'solved_at' ONLY if they improve their score.
+    # This acts as the tie-breaker: "Who reached this score FIRST?"
     if passed_count > progress.tests_passed:
-        # 1. Award points for NEW tests passed (Partial Scoring)
+        # Partial Scoring: 10 pts per new test passed
         new_tests = passed_count - progress.tests_passed
-        points_per_test = 10 # You can adjust this
+        points_per_test = 10 
         
         score_change += (new_tests * points_per_test)
         
-        # 2. Update their record
+        # Update Record
         progress.tests_passed = passed_count
-        progress.solved_at = datetime.utcnow() # Updates timestamp on improvement!
+        progress.solved_at = datetime.utcnow() # Tie-breaker timestamp
 
-    # CHECK: Did they solve ALL tests?
+    # CHECK: Did they solve ALL tests? (Completion Bonus)
     is_complete = (passed_count == len(test_cases))
     
     if is_complete and not progress.is_solved:
         progress.is_solved = True
         
-        # --- BONUS SCORING ---
-        # A. Base Difficulty Points
+        # --- BONUS SCORING (Updated) ---
+        # 1. Base Points (Difficulty)
         score_change += config['base_points']
 
-        # B. Probes Bonus (50 pts per unused probe)
-        # We assume max_probes is 3. If they used 1, they get 2 * 50 = 100 bonus.
+        # 2. Probe Bonus (Reward for efficiency)
+        # 50 points per unused probe
         probes_left = max(0, config['max_probes'] - progress.probes_used)
         probe_bonus = probes_left * 50
         
-        # C. Time Bonus (100 pts - minutes taken)
-        # Calculates time since they registered/started
-        time_taken = (datetime.utcnow() - user.event_start_time).total_seconds() / 60
-        time_bonus = max(0, 100 - int(time_taken))
+        # 3. Time Bonus -> REMOVED per your request
+        # We rely on 'solved_at' for tie-breaking instead.
         
-        total_bonus = probe_bonus + time_bonus
-        score_change += total_bonus
+        score_change += probe_bonus
         
-        logs.append({"status": "Bonus", "msg": f"Base: {config['base_points']}, Speed Bonus: {time_bonus}, Probe Bonus: {probe_bonus}"})
+        logs.append({
+            "status": "Bonus", 
+            "msg": f"Base: {config['base_points']}, Probe Bonus: {probe_bonus}"
+        })
 
     # Commit Score Updates
     if score_change > 0:
         user.total_score += score_change
     
-    # Always commit to save progress (even if score didn't change)
     db.session.commit()
 
     return jsonify({
@@ -227,7 +225,6 @@ def submit():
         "total_tests": len(test_cases),
         "details": logs
     })
-
 
 @app.route('/get_progress', methods=['POST'])
 def get_progress():
