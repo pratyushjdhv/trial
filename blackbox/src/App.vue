@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { onMounted } from 'vue'
 import axios from 'axios'
 import Login from './components/Login.vue'
 import Dashboard from './components/Dashboard.vue'
@@ -37,6 +38,45 @@ const loadDashboard = async () => {
 const handleSelectQuestion = (q) => {
     selectedQ.value = q
     view.value = 'challenge'
+}
+
+onMounted(() => {
+    // Could check for existing session here
+    const savedUser = localStorage.getItem('user_data')
+    if (savedUser) {
+        const data = JSON.parse(savedUser)
+        userId.value = data.id
+        username.value = data.username
+        loggedIn.value = true
+        loadDashboard()
+    }
+})
+
+// 2. Save session after login
+const registerUser = async () => {
+    try {
+        const res = await axios.post('http://127.0.0.1:5000/register', { username: username.value }) // Remember to change IP!
+
+        userId.value = res.data.id
+        username.value = res.data.username // Ensure backend sends this
+        loggedIn.value = true
+
+        // SAVE TO BROWSER MEMORY
+        localStorage.setItem('user_data', JSON.stringify({
+            id: userId.value,
+            username: username.value
+        }))
+
+        loadDashboard()
+    } catch (err) {
+        alert(err.response?.data?.error || "Server Error")
+    }
+}
+
+// 3. Optional: Add a Logout function
+const logout = () => {
+    localStorage.removeItem('user_data')
+    location.reload()
 }
 </script>
 

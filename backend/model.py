@@ -18,12 +18,15 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
     
+
 class UserProgress(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
     question_id = db.Column(db.Integer, nullable=False)
+    
     probes_used = db.Column(db.Integer, default=0)
     is_solved = db.Column(db.Boolean, default=False)
+    
 
-    solved_at = db.Column(db.DateTime)
+    tests_passed = db.Column(db.Integer, default=0) # Tracks how many hidden tests they passed
+    solved_at = db.Column(db.DateTime) # Tracks LAST successful submission time

@@ -14,17 +14,25 @@ def register():
     if not username:
         return jsonify({"error": "Username is required!"}), 400
 
-    # 2. Check if user already exists
     existing_user = User.query.filter_by(username=username).first()
+    
     if existing_user:
-        return jsonify({"error": "Username taken! please take another."}), 400
+        return jsonify({
+            "message": f"Welcome back, {username}!", 
+            "id": existing_user.id,
+            "username": existing_user.username
+        })
 
+    # Create new user if they don't exist
     new_user = User(username=username)
+    db.session.add(new_user)
+    db.session.commit()
 
-    db.session.add(new_user)  # Add to the "staging area"
-    db.session.commit()      # Save changes permanently
-
-    return jsonify({"message": f"Welcome, {username}!", "id": new_user.id})
+    return jsonify({
+        "message": f"Welcome, {username}!", 
+        "id": new_user.id,
+        "username": new_user.username
+    })
 
 
 @app.route('/users', methods=['GET'])
@@ -108,6 +116,8 @@ def probe():
 
 
 # --- NEW: SUBMIT ROUTE (Runs User Code in Docker) ---
+# backend/routes.py
+
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.json
@@ -118,70 +128,91 @@ def submit():
     if not user_code:
         return jsonify({"error": "No code provided"}), 400
 
-    # 1. Get Question Details
+    # 1. Get Config
     config = QUESTIONS.get(question_id)
     if not config:
         return jsonify({"error": "Invalid Question"}), 404
 
     # 2. Run Hidden Test Cases
-    # We define hidden cases in logic.py or hardcode them here
-    # Example: default cases if none provided in config
-    test_cases = config.get('test_cases', [0, 10, -5, 100])
-
-    passed = 0
+    test_cases = config.get('test_cases', [])
+    passed_count = 0
     logs = []
 
     for test_val in test_cases:
-        # A. Get Expected Output (From your logic)
         expected = config['func'](test_val)
+        actual = run_docker(user_code, test_val) # Run in Docker
 
-        # B. Get Actual Output (From Student Code via Docker)
-        actual = run_docker(user_code, test_val)
-
-        # C. Compare
-        # We convert both to string and strip whitespace to be safe
         if str(actual).strip() == str(expected).strip():
-            passed += 1
+            passed_count += 1
             logs.append({"input": test_val, "status": "Pass"})
         else:
-            logs.append({"input": test_val, "status": "Fail",
-                        "got": actual, "expected": "Hidden"})
+            logs.append({"input": test_val, "status": "Fail", "got": actual, "expected": "Hidden"})
 
-    # 3. Calculate Score
-    is_correct = (passed == len(test_cases))
-    points_awarded = 0
+    # 3. Database & Scoring Logic
+    user = User.query.get(user_id)
+    progress = UserProgress.query.filter_by(user_id=user_id, question_id=question_id).first()
 
-    if is_correct:
-        progress = UserProgress.query.filter_by(
-            user_id=user_id, question_id=question_id).first()
+    # Initialize progress if it doesn't exist (Crucial for first submit)
+    if not progress:
+        progress = UserProgress(
+            user_id=user_id, 
+            question_id=question_id, 
+            probes_used=0, 
+            tests_passed=0, # Default to 0
+            is_solved=False
+        )
+        db.session.add(progress)
 
-        # FIX: Initialize with default values if it doesn't exist
-        if not progress:
-            progress = UserProgress(
-                user_id=user_id,
-                question_id=question_id,
-                probes_used=0,
-                is_solved=False
-            )
-            db.session.add(progress)
+    score_change = 0
+    
+    # CHECK: Did they improve? (Passed more tests than before)
+    if passed_count > progress.tests_passed:
+        # 1. Award points for NEW tests passed (Partial Scoring)
+        new_tests = passed_count - progress.tests_passed
+        points_per_test = 10 # You can adjust this
+        
+        score_change += (new_tests * points_per_test)
+        
+        # 2. Update their record
+        progress.tests_passed = passed_count
+        progress.solved_at = datetime.utcnow() # Updates timestamp on improvement!
 
-        if not progress.is_solved:
-            progress.is_solved = True
+    # CHECK: Did they solve ALL tests?
+    is_complete = (passed_count == len(test_cases))
+    
+    if is_complete and not progress.is_solved:
+        progress.is_solved = True
+        
+        # --- BONUS SCORING ---
+        # A. Base Difficulty Points
+        score_change += config['base_points']
 
-            # Simple Time Penalty Logic (Optional)
-            # points = Base - (Minutes since event start)
-            points_awarded = config['base_points']
+        # B. Probes Bonus (50 pts per unused probe)
+        # We assume max_probes is 3. If they used 1, they get 2 * 50 = 100 bonus.
+        probes_left = max(0, config['max_probes'] - progress.probes_used)
+        probe_bonus = probes_left * 50
+        
+        # C. Time Bonus (100 pts - minutes taken)
+        # Calculates time since they registered/started
+        time_taken = (datetime.utcnow() - user.event_start_time).total_seconds() / 60
+        time_bonus = max(0, 100 - int(time_taken))
+        
+        total_bonus = probe_bonus + time_bonus
+        score_change += total_bonus
+        
+        logs.append({"status": "Bonus", "msg": f"Base: {config['base_points']}, Speed Bonus: {time_bonus}, Probe Bonus: {probe_bonus}"})
 
-            # Update Total User Score
-            user = User.query.get(user_id)
-            user.total_score += points_awarded
-
-            db.session.commit()
+    # Commit Score Updates
+    if score_change > 0:
+        user.total_score += score_change
+    
+    # Always commit to save progress (even if score didn't change)
+    db.session.commit()
 
     return jsonify({
-        "solved": is_correct,
-        "score_added": points_awarded,
-        "tests_passed": passed,
+        "solved": is_complete,
+        "score_added": score_change,
+        "tests_passed": passed_count,
         "total_tests": len(test_cases),
         "details": logs
     })
