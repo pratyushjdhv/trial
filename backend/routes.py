@@ -101,9 +101,20 @@ def probe():
     # 3. Run YOUR Hidden Logic
     try:
         expected_output = config['func'](val)
-
-        # Save progress
+        
+        # Update counts
         progress.probes_used += 1
+        
+        # --- NEW: Save to History Log ---
+        new_log = ProbeLog(
+            user_id=user_id,
+            question_id=question_id,
+            input_val=str(val),
+            output_val=str(expected_output)
+        )
+        db.session.add(new_log)
+        # --------------------------------
+
         db.session.commit()
 
         return jsonify({
@@ -112,7 +123,7 @@ def probe():
             "probes_left": config['max_probes'] - progress.probes_used
         })
     except Exception as e:
-        return jsonify({"error": "Internal Logic Error"}), 500
+            return jsonify({"error": str(e)}), 500
 
 
 # --- NEW: SUBMIT ROUTE (Runs User Code in Docker) ---
@@ -215,4 +226,25 @@ def submit():
         "tests_passed": passed_count,
         "total_tests": len(test_cases),
         "details": logs
+    })
+
+
+@app.route('/get_progress', methods=['POST'])
+def get_progress():
+    data = request.json
+    user_id = data.get('user_id')
+    question_id = data.get('question_id')
+    
+    # 1. Get attempts count
+    progress = UserProgress.query.filter_by(user_id=user_id, question_id=question_id).first()
+    probes_used = progress.probes_used if progress else 0
+    
+    # 2. Get Probe History (Newest first)
+    logs = ProbeLog.query.filter_by(user_id=user_id, question_id=question_id).order_by(ProbeLog.timestamp.desc()).all()
+    
+    history = [{"in": log.input_val, "out": log.output_val} for log in logs]
+    
+    return jsonify({
+        "probes_used": probes_used,
+        "history": history
     })

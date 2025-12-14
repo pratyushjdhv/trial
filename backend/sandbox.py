@@ -74,59 +74,84 @@ except:
     print("WARNING: Docker not found!")
     client = None
 
-def run_docker(user_code, input_val):
-    if not client:
-        return "Error: Docker client not initialized"
+# --- NEW: The Wrapper Script ---
+# This code is appended to the student's code inside the container.
+# It reads input, calls their 'solve' function, and prints the result.
+EXECUTION_HARNESS = """
+import sys
 
-    # 1. Write the student's code to a temp file
+if __name__ == "__main__":
+    try:
+        # Read input from Stdin (piped from Docker)
+        input_str = sys.stdin.read().strip()
+        if not input_str: exit()
+        
+        # Parse Input (Assume integer for now)
+        n = int(input_str)
+        
+        # Check if they defined 'solve' or 'solution'
+        if 'solve' in globals():
+            print(solve(n))
+        elif 'solution' in globals():
+            print(solution(n))
+        else:
+            # Fallback: Maybe they wrote a script that just prints?
+            pass 
+            
+    except Exception as e:
+        print(f"Runtime Error: {e}")
+"""
+
+def run_docker(user_code, input_val):
+    if not client: return "Error: Docker client not initialized"
+
+    # 1. Combine User Code + Harness
+    # We add the harness at the end so it can access the user's functions
+    full_script = user_code + "\n\n" + EXECUTION_HARNESS
+
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.py') as temp_script:
-        temp_script.write(user_code)
+        temp_script.write(full_script)
         temp_path = temp_script.name
 
     try:
+        # Ensure image exists
         try:
             client.images.get("python:3.9-slim")
         except docker.errors.ImageNotFound:
-            print("Downloading Python image... this may take a moment.")
+            print("Downloading Python image...")
             client.images.pull("python:3.9-slim")
             
-        # 2. Prepare the input (Add newline so input() doesn't hang!)
+        # 2. Prepare Input
         input_str = (str(input_val) + "\n").encode('utf-8')
 
-        # 3. Create the container (Don't start it yet)
+        # 3. Create Container
         container = client.containers.create(
             image="python:3.9-slim",
             command="python /app/script.py",
             volumes={temp_path: {'bind': '/app/script.py', 'mode': 'ro'}},
             mem_limit="128m",
             network_disabled=True,
-            stdin_open=True, # Allow sending input
+            stdin_open=True,
             auto_remove=False
         )
 
-        # 4. Start and Send Input
         container.start()
         
-        # This sends the number + Enter key to the running script
+        # Send Input
         socket = container.attach_socket(params={'stdin': 1, 'stream': 1})
         socket.send(input_str)
         socket.close()
 
-        # 5. Wait for finish and grab logs
-        container.wait(timeout=3) # Wait max 3 seconds
+        container.wait(timeout=2)
         output = container.logs(stdout=True, stderr=True).decode('utf-8')
-        
         container.remove()
+        
         return output.strip()
 
     except Exception as e:
-        # Print the REAL error to your server terminal
         print(f"🛑 DOCKER FAILURE: {e}")
-        
-        # Cleanup container if it got stuck
         try: container.remove(force=True)
         except: pass
-        
         return f"Error: {str(e)}"
     
     finally:

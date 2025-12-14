@@ -30,3 +30,12 @@ class UserProgress(db.Model):
 
     tests_passed = db.Column(db.Integer, default=0) # Tracks how many hidden tests they passed
     solved_at = db.Column(db.DateTime) # Tracks LAST successful submission time
+
+
+class ProbeLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    question_id = db.Column(db.Integer, nullable=False)
+    input_val = db.Column(db.String(50))
+    output_val = db.Column(db.String(50))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)

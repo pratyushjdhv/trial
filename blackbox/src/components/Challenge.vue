@@ -1,18 +1,49 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-// We need the User ID and Question Data to make API calls
 const props = defineProps(['question', 'userId'])
 const emit = defineEmits(['back'])
 
-// Local State (Specific to this game session)
-const userCode = ref('import sys\n\n# Read input from arguments\nn = int(input())\n\n# Write function logic here:\nprint(n)')
+// Updated default code with Function Template
+const userCode = ref('def solve(n):\n    # Write your logic here\n    return n')
 const probeInput = ref('')
 const probeHistory = ref([])
-const probesLeft = ref(props.question.max_probes) // Start with max probes
+const probesLeft = ref(props.question.max_probes)
 const submitLogs = ref([])
 const submitStatus = ref('')
+
+// --- NEW: Load History on Mount ---
+const loadProgress = async () => {
+    try {
+        // Remember to use your LAN IP here if deploying!
+        const res = await axios.post('http://127.0.0.1:5000/get_progress', {
+            user_id: props.userId,
+            question_id: props.question.id
+        })
+
+        probeHistory.value = res.data.history
+        probesLeft.value = props.question.max_probes - res.data.probes_used
+
+    } catch (err) {
+        console.error("Could not load progress")
+    }
+}
+
+onMounted(() => {
+    loadProgress()
+})
+
+// --- NEW: Handle Tab Key ---
+const handleTab = (event) => {
+    const textarea = event.target
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    // Insert 4 spaces
+    userCode.value = userCode.value.substring(0, start) + "    " + userCode.value.substring(end)
+    // Move cursor
+    setTimeout(() => textarea.selectionStart = textarea.selectionEnd = start + 4, 0)
+}
 
 // --- LOGIC MOVED HERE ---
 const sendProbe = async () => {
@@ -64,7 +95,8 @@ const submitCode = async () => {
                     <h3>📝 Mission: Level {{ question.id }}</h3>
                     <span class="desc">{{ question.description }}</span>
                 </div>
-                <textarea v-model="userCode" class="code-editor" spellcheck="false"></textarea>
+                <textarea v-model="userCode" class="code-editor" spellcheck="false"
+                    @keydown.tab.prevent="handleTab"></textarea>
                 <button @click="submitCode" class="submit-btn">
                     {{ submitStatus === 'loading' ? 'Compiling...' : '🚀 Submit Code' }}
                 </button>
