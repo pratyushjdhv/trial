@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import Swal from 'sweetalert2' // Import the new library
+import api from '@/api'
 
 const props = defineProps(['question', 'userId'])
 const emit = defineEmits(['back'])
@@ -15,7 +16,7 @@ const submitStatus = ref('')
 
 const loadProgress = async () => {
     try {
-        const res = await axios.post('http://127.0.0.1:5000/get_progress', {
+        const res = await api.post('/get_progress', {
             user_id: props.userId,
             question_id: props.question.id
         })
@@ -39,7 +40,7 @@ const handleTab = (event) => {
 const sendProbe = async () => {
     if (!probeInput.value) return
     try {
-        const res = await axios.post('http://127.0.0.1:5000/probe', {
+        const res = await api.post('/probe', {
             user_id: props.userId,
             question_id: props.question.id,
             input: probeInput.value
@@ -64,12 +65,11 @@ const submitCode = async () => {
     submitLogs.value = []
     
     try {
-        const res = await axios.post('http://127.0.0.1:5000/submit', {
+        const res = await api.post('/submit', {
             user_id: props.userId,
             question_id: props.question.id,
             code: userCode.value
         })
-
         submitLogs.value = res.data.details
         
         if (res.data.solved) {

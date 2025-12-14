@@ -5,6 +5,7 @@ import axios from 'axios'
 import Login from './components/Login.vue'
 import Dashboard from './components/Dashboard.vue'
 import Challenge from './components/Challenge.vue'
+import api from '@/api'
 
 // Global State
 const username = ref('')
@@ -16,7 +17,7 @@ const selectedQ = ref(null)
 // --- ACTIONS ---
 const handleJoin = async (name) => {
     try {
-        const res = await axios.post('http://127.0.0.1:5000/register', { username: name })
+        const res = await api.post('/register', { username: name })
         username.value = name
         userId.value = res.data.id
         loadDashboard()
@@ -27,7 +28,8 @@ const handleJoin = async (name) => {
 
 const loadDashboard = async () => {
     try {
-        const res = await axios.get('http://127.0.0.1:5000/questions')
+        const res = await api.get('/questions')
+        
         questions.value = res.data
         view.value = 'dashboard'
     } catch (err) {
@@ -55,8 +57,8 @@ onMounted(() => {
 // 2. Save session after login
 const registerUser = async () => {
     try {
-        const res = await axios.post('http://127.0.0.1:5000/register', { username: username.value }) // Remember to change IP!
-
+        // Remember to change IP!
+        const res = await api.post('/register', { username: username.value })
         userId.value = res.data.id
         username.value = res.data.username // Ensure backend sends this
         loggedIn.value = true
