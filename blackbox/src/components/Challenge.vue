@@ -1,19 +1,44 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
-import Swal from 'sweetalert2' // Import the new library
+import { ref, onMounted, watch } from 'vue' // Added 'watch'
 import api from '@/api'
+import Swal from 'sweetalert2'
 
 const props = defineProps(['question', 'userId'])
 const emit = defineEmits(['back'])
 
-const userCode = ref('def solve(n):\n    # Write your logic here\n    return n')
+// --- 1. LANGUAGE & TEMPLATES ---
+const language = ref('python')
+
+const TEMPLATES = {
+    python: `def solve(n):
+    # Write your logic here
+    return n`,
+    
+    c: `int solve(int n) {
+    // Write your logic here
+    return n;
+}`
+}
+
+// Initialize code with Python template
+const userCode = ref(TEMPLATES.python)
+
+// --- 2. THE WATCHER ---
+// Whenever 'language' changes, this runs automatically
+watch(language, (newLang) => {
+    // Optional: Only change if code is empty or matches the OTHER template 
+    // (to prevent overwriting user work), but for now, we force update.
+    userCode.value = TEMPLATES[newLang]
+})
+
+// --- 3. EXISTING STATE ---
 const probeInput = ref('')
 const probeHistory = ref([])
 const probesLeft = ref(props.question.max_probes)
 const submitLogs = ref([])
 const submitStatus = ref('')
 
+// --- 4. LOAD HISTORY ---
 const loadProgress = async () => {
     try {
         const res = await api.post('/get_progress', {
@@ -29,6 +54,7 @@ const loadProgress = async () => {
 
 onMounted(() => { loadProgress() })
 
+// --- 5. EDITOR UTILS ---
 const handleTab = (event) => {
     const textarea = event.target
     const start = textarea.selectionStart
@@ -37,6 +63,7 @@ const handleTab = (event) => {
     setTimeout(() => textarea.selectionStart = textarea.selectionEnd = start + 4, 0)
 }
 
+// --- 6. ACTIONS ---
 const sendProbe = async () => {
     if (!probeInput.value) return
     try {
@@ -49,7 +76,6 @@ const sendProbe = async () => {
         probesLeft.value = res.data.probes_left
         probeInput.value = ''
     } catch (err) {
-        // Nice error popup
         Swal.fire({
             icon: 'error',
             title: 'Probe Failed',
@@ -68,13 +94,14 @@ const submitCode = async () => {
         const res = await api.post('/submit', {
             user_id: props.userId,
             question_id: props.question.id,
-            code: userCode.value
+            code: userCode.value,
+            language: language.value // Don't forget to send this!
         })
+
         submitLogs.value = res.data.details
         
         if (res.data.solved) {
             submitStatus.value = 'success'
-            // 🎉 BEAUTIFUL SUCCESS POPUP
             Swal.fire({
                 icon: 'success',
                 title: 'MISSION ACCOMPLISHED',
@@ -88,7 +115,6 @@ const submitCode = async () => {
             })
         } else {
             submitStatus.value = 'fail'
-            // ⚠️ NICE FAILURE POPUP
             Swal.fire({
                 icon: 'warning',
                 title: 'Partial Success',
@@ -124,6 +150,14 @@ const submitCode = async () => {
                 <div class="panel-header">
                     <h3>📝 Mission: Level {{ question.id }}</h3>
                     <span class="desc">{{ question.description }}</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="color: #fff; margin-right: 10px;">Language:</label>
+                    <select v-model="language"
+                        style="padding: 5px; background: #000; color: #0f0; border: 1px solid #333;">
+                        <option value="python">Python</option>
+                        <option value="c">C</option>
+                    </select>
                 </div>
                 <textarea v-model="userCode" class="code-editor" spellcheck="false"
                     @keydown.tab.prevent="handleTab"></textarea>

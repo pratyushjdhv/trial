@@ -133,6 +133,7 @@ def submit():
     user_id = data.get('user_id')
     question_id = data.get('question_id')
     user_code = data.get('code')
+    language = data.get('language', 'python')
 
     if not user_code:
         return jsonify({"error": "No code provided"}), 400
@@ -149,7 +150,7 @@ def submit():
 
     for test_val in test_cases:
         expected = config['func'](test_val)
-        actual = run_docker(user_code, test_val)
+        actual = run_docker(user_code, test_val, language)
 
         if str(actual).strip() == str(expected).strip():
             passed_count += 1
