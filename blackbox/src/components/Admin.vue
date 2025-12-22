@@ -1,10 +1,120 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import api from '@/api'
 
 const leaderboard = ref([])
 const top3 = ref([])
 const eventEnded = ref(false)
+const canvasRef = ref(null)
+
+// --- GRID EFFECT ---
+onMounted(() => {
+    const canvas = canvasRef.value
+    if (!canvas) return
+    const ctx = canvas.getContext("2d");
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    let mouse = { x: -9999, y: -9999 };
+    const squareSize = 80;
+    const grid = [];
+
+    function initGrid() {
+      grid.length = 0;
+      for (let x = 0; x < width; x += squareSize) {
+        for (let y = 0; y < height; y += squareSize) {
+          grid.push({
+            x,
+            y,
+            alpha: 0,
+            fading: false,
+            lastTouched: 0,
+          });
+        }
+      }
+    }
+
+    function getCellAt(x, y) {
+      return grid.find(cell =>
+        x >= cell.x && x < cell.x + squareSize &&
+        y >= cell.y && y < cell.y + squareSize
+      );
+    }
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      initGrid();
+    };
+
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+
+      const cell = getCellAt(mouse.x, mouse.y);
+      if (cell && cell.alpha === 0) {
+        cell.alpha = 1;
+        cell.lastTouched = Date.now();
+        cell.fading = false;
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("mousemove", handleMouseMove);
+
+    let animationFrameId;
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, width, height);
+      const now = Date.now();
+
+      for (let i = 0; i < grid.length; i++) {
+        const cell = grid[i];
+
+        // Start fading after 500ms
+        if (cell.alpha > 0 && !cell.fading && now - cell.lastTouched > 500) {
+          cell.fading = true;
+        }
+
+        if (cell.fading) {
+          cell.alpha -= 0.02;
+          if (cell.alpha <= 0) {
+            cell.alpha = 0;
+            cell.fading = false;
+          }
+        }
+
+        if (cell.alpha > 0) {
+          const centerX = cell.x + squareSize / 2;
+          const centerY = cell.y + squareSize / 2;
+
+          const gradient = ctx.createRadialGradient(
+            centerX, centerY, 5,
+            centerX, centerY, squareSize
+          );
+          gradient.addColorStop(0, `rgba(0, 255, 204, ${cell.alpha})`);
+          gradient.addColorStop(1, `rgba(0, 255, 204, 0)`);
+
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = 1.3;
+          ctx.strokeRect(cell.x + 0.5, cell.y + 0.5, squareSize - 1, squareSize - 1);
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(drawGrid);
+    }
+
+    initGrid();
+    drawGrid();
+
+    onUnmounted(() => {
+        window.removeEventListener("resize", handleResize);
+        window.removeEventListener("mousemove", handleMouseMove);
+        cancelAnimationFrame(animationFrameId);
+    })
+})
 
 const endEvent = async () => {
     try {
@@ -33,53 +143,66 @@ const startNewEvent = async () => {
 </script>
 
 <template>
-    <div class="admin-panel">
-        <h2>Admin Control</h2>
-        
-        <div v-if="!eventEnded">
-            <button @click="endEvent" class="danger-btn">END EVENT</button>
-        </div>
-
-        <div v-else class="results">
-            <div class="actions">
-                <button @click="startNewEvent" class="primary-btn">START NEW EVENT</button>
-            </div>
-
-            <h3>🏆 Event Results</h3>
+    <div>
+        <canvas ref="canvasRef" class="grid-canvas"></canvas>
+        <div class="admin-panel">
+            <h2>Admin Control</h2>
             
-            <div class="top-3">
-                <h4>Overall Top 3</h4>
-                <div v-for="(user, index) in top3" :key="user.id" class="winner-card">
-                    <span class="rank">#{{ index + 1 }}</span>
-                    <span class="name">{{ user.username }}</span>
-                    <span class="score">{{ user.total_score }} pts</span>
-                </div>
+            <div v-if="!eventEnded">
+                <button @click="endEvent" class="danger-btn">END EVENT</button>
             </div>
 
-            <div class="leaderboard">
-                <h4>Full Leaderboard</h4>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Agent</th>
-                            <th>Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(user, index) in leaderboard" :key="user.id">
-                            <td>{{ index + 1 }}</td>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.total_score }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div v-else class="results">
+                <div class="actions">
+                    <button @click="startNewEvent" class="primary-btn">START NEW EVENT</button>
+                </div>
+
+                <h3>🏆 Event Results</h3>
+                
+                <div class="top-3">
+                    <h4>Overall Top 3</h4>
+                    <div v-for="(user, index) in top3" :key="user.id" class="winner-card">
+                        <span class="rank">#{{ index + 1 }}</span>
+                        <span class="name">{{ user.username }}</span>
+                        <span class="score">{{ user.total_score }} pts</span>
+                    </div>
+                </div>
+
+                <div class="leaderboard">
+                    <h4>Full Leaderboard</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Agent</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(user, index) in leaderboard" :key="user.id">
+                                <td>{{ index + 1 }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.total_score }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
+.grid-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: #000;
+}
+
 .admin-panel {
     max-width: 800px;
     margin: 0 auto;

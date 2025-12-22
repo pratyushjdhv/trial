@@ -153,12 +153,22 @@ const handleLogout = () => {
 
 <style>
 /* Global Styles */
+body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: #ffffff;
+    font-family: 'Segoe UI', sans-serif;
+}
+
 .app-container {
     font-family: 'Courier New', monospace;
-    background: #1a1a1a;
+    /* background: #1a1a1a;  Removed to show canvas */
     color: #0f0;
     min-height: 100vh;
     padding: 20px;
+    position: relative; /* Ensure z-index context works if needed */
+    z-index: 1; /* Ensure content is above background */
 }
 
 header {
