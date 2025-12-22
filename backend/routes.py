@@ -246,3 +246,26 @@ def get_progress():
         "probes_used": probes_used,
         "history": history
     })
+
+
+@app.route('/admin/end_event', methods=['POST'])
+def end_event():
+    # 1. Get all users ordered by total score (descending)
+    users = User.query.order_by(User.total_score.desc()).all()
+    
+    # 2. Prepare Leaderboard Data
+    leaderboard = []
+    for u in users:
+        leaderboard.append({
+            "id": u.id,
+            "username": u.username,
+            "total_score": u.total_score
+        })
+    
+    # 3. Get Top 3
+    top3 = leaderboard[:3]
+    
+    return jsonify({
+        "leaderboard": leaderboard,
+        "top3": top3
+    })

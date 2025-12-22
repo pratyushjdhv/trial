@@ -1,12 +1,23 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const username = ref('')
+const password = ref('')
+const showPassword = ref(false)
 const emit = defineEmits(['join']) // Define custom event
+
+watch(username, (newVal) => {
+    if (newVal.trim().toLowerCase() === 'admin') {
+        showPassword.value = true
+    } else {
+        showPassword.value = false
+        password.value = ''
+    }
+})
 
 const handleLogin = () => {
     if (username.value.trim()) {
-        emit('join', username.value) // Send data to parent
+        emit('join', { username: username.value, password: password.value }) 
     }
 }
 </script>
@@ -15,6 +26,7 @@ const handleLogin = () => {
     <div class="center-box">
         <h2>Identify Yourself</h2>
         <input v-model="username" placeholder="Enter Codename" @keyup.enter="handleLogin" />
+        <input v-if="showPassword" v-model="password" type="password" placeholder="Admin Password" @keyup.enter="handleLogin" />
         <button @click="handleLogin">Connect</button>
     </div>
 </template>

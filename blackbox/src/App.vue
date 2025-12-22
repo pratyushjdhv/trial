@@ -5,21 +5,43 @@ import axios from 'axios'
 import Login from './components/Login.vue'
 import Dashboard from './components/Dashboard.vue'
 import Challenge from './components/Challenge.vue'
+import Admin from './components/Admin.vue'
 import api from '@/api'
 
 // Global State
 const username = ref('')
 const userId = ref(null)
-const view = ref('login') // 'login', 'dashboard', 'challenge'
+const view = ref('login') // 'login', 'dashboard', 'challenge', 'admin'
 const questions = ref([])
 const selectedQ = ref(null)
 
 // --- ACTIONS ---
-const handleJoin = async (name) => {
+const handleJoin = async (credentials) => {
+    const name = credentials.username
+    const password = credentials.password
+
+    if (name.toLowerCase() === 'admin') {
+        if (password === 'admin123') {
+            view.value = 'admin'
+            username.value = 'Admin'
+            userId.value = 'admin'
+            return
+        } else {
+            alert("Access Denied")
+            return
+        }
+    }
+
     try {
         const res = await api.post('/register', { username: name })
         username.value = name
         userId.value = res.data.id
+        
+        localStorage.setItem('user_data', JSON.stringify({
+            id: userId.value,
+            username: username.value
+        }))
+
         loadDashboard()
     } catch (err) {
         alert("Login Error: " + err.response?.data?.error)
@@ -49,36 +71,17 @@ onMounted(() => {
         const data = JSON.parse(savedUser)
         userId.value = data.id
         username.value = data.username
-        loggedIn.value = true
         loadDashboard()
     }
 })
 
-// 2. Save session after login
-const registerUser = async () => {
-    try {
-        // Remember to change IP!
-        const res = await api.post('/register', { username: username.value })
-        userId.value = res.data.id
-        username.value = res.data.username // Ensure backend sends this
-        loggedIn.value = true
-
-        // SAVE TO BROWSER MEMORY
-        localStorage.setItem('user_data', JSON.stringify({
-            id: userId.value,
-            username: username.value
-        }))
-
-        loadDashboard()
-    } catch (err) {
-        alert(err.response?.data?.error || "Server Error")
-    }
-}
-
-// 3. Optional: Add a Logout function
-const logout = () => {
+const handleLogout = () => {
     localStorage.removeItem('user_data')
-    location.reload()
+    userId.value = null
+    username.value = ''
+    view.value = 'login'
+    questions.value = []
+    selectedQ.value = null
 }
 </script>
 
@@ -86,7 +89,10 @@ const logout = () => {
     <div class="app-container">
         <header>
             <h1>🕵️ BLACK BOX OS</h1>
-            <div v-if="userId" class="user-info">Agent: {{ username }}</div>
+            <div v-if="userId" class="user-info">
+                Agent: {{ username }}
+                <button @click="handleLogout" class="logout-btn">Logout</button>
+            </div>
         </header>
 
         <Login v-if="view === 'login'" @join="handleJoin" />
@@ -95,6 +101,8 @@ const logout = () => {
 
         <Challenge v-else-if="view === 'challenge'" :key="selectedQ.id" :question="selectedQ" :userId="userId"
             @back="loadDashboard" />
+
+        <Admin v-else-if="view === 'admin'" />
 
     </div>
 </template>
@@ -115,5 +123,21 @@ header {
     border-bottom: 2px solid #333;
     padding-bottom: 10px;
     margin-bottom: 30px;
+    align-items: center;
+}
+
+.logout-btn {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 5px 10px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.logout-btn:hover {
+    background: #555;
+    border-color: #fff;
 }
 </style>
