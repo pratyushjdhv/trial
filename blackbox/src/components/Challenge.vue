@@ -165,9 +165,9 @@ const submitCode = async () => {
             </div>
 
             <div class="panel right">
-                <h3>🧪 Black Box Probe</h3>
+                <h3><i class="bi bi-geo-fill" style="font-size: 2rem;"></i> Black Box Probe</h3>
                 <div class="probe-box">
-                    <input type="number" v-model="probeInput" placeholder="Enter number..." />
+                    <input type="text" v-model="probeInput" placeholder="Enter input..." style="padding: 15px;" />
                     <button @click="sendProbe" :disabled="probesLeft <= 0">TEST</button>
                 </div>
                 <p class="status">Probes Remaining: {{ probesLeft }}</p>
