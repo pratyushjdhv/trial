@@ -6,6 +6,7 @@ import Login from './components/Login.vue'
 import Dashboard from './components/Dashboard.vue'
 import Challenge from './components/Challenge.vue'
 import Admin from './components/Admin.vue'
+import GameOverModal from './components/GameOverModal.vue'
 import api from '@/api'
 
 // Global State
@@ -14,11 +15,44 @@ const userId = ref(null)
 const view = ref('login') // 'login', 'dashboard', 'challenge', 'admin'
 const questions = ref([])
 const selectedQ = ref(null)
+const showGameOver = ref(false)
+const topWinners = ref([])
 
-// --- ACTIONS ---
+// --- POLLING FOR EVENT STATUS ---
+const checkEventStatus = async () => {
+    // Don't poll if we are already showing the modal or if we are admin
+    if (showGameOver.value || view.value === 'admin') return
+
+    try {
+        const res = await api.get('/event/status')
+        if (res.data.ended) {
+            topWinners.value = res.data.top5
+            showGameOver.value = true
+        }
+    } catch (err) {
+        console.error("Polling error", err)
+    }
+}
+
+// Start polling when app mounts
+onMounted(() => {
+    setInterval(checkEventStatus, 5000) // Check every 5 seconds
+
+    // Could check for existing session here
+    const savedUser = localStorage.getItem('user_data')
+    if (savedUser) {
+        const data = JSON.parse(savedUser)
+        userId.value = data.id
+        username.value = data.username
+        loadDashboard()
+    }
+})
 const handleJoin = async (credentials) => {
-    const name = credentials.username
-    const password = credentials.password
+    // Handle both object (new) and string (legacy) payloads
+    const name = (credentials && typeof credentials === 'object') ? credentials.username : credentials
+    const password = (credentials && typeof credentials === 'object') ? credentials.password : ''
+
+    if (!name) return
 
     if (name.toLowerCase() === 'admin') {
         if (password === 'admin123') {
@@ -64,16 +98,7 @@ const handleSelectQuestion = (q) => {
     view.value = 'challenge'
 }
 
-onMounted(() => {
-    // Could check for existing session here
-    const savedUser = localStorage.getItem('user_data')
-    if (savedUser) {
-        const data = JSON.parse(savedUser)
-        userId.value = data.id
-        username.value = data.username
-        loadDashboard()
-    }
-})
+// onMounted is already defined above with polling logic
 
 const handleLogout = () => {
     localStorage.removeItem('user_data')
@@ -103,6 +128,8 @@ const handleLogout = () => {
             @back="loadDashboard" />
 
         <Admin v-else-if="view === 'admin'" />
+
+        <GameOverModal v-if="showGameOver" :winners="topWinners" />
 
     </div>
 </template>

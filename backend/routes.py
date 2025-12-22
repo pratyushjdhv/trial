@@ -248,8 +248,14 @@ def get_progress():
     })
 
 
+# Global State for Event Status
+EVENT_ENDED = False
+TOP_5_WINNERS = []
+
 @app.route('/admin/end_event', methods=['POST'])
 def end_event():
+    global EVENT_ENDED, TOP_5_WINNERS
+    
     # 1. Get all users ordered by total score (descending)
     users = User.query.order_by(User.total_score.desc()).all()
     
@@ -265,7 +271,18 @@ def end_event():
     # 3. Get Top 3
     top3 = leaderboard[:3]
     
+    # 4. Set Global State
+    EVENT_ENDED = True
+    TOP_5_WINNERS = leaderboard[:5] # Store Top 5 for the modal
+    
     return jsonify({
         "leaderboard": leaderboard,
         "top3": top3
+    })
+
+@app.route('/event/status', methods=['GET'])
+def event_status():
+    return jsonify({
+        "ended": EVENT_ENDED,
+        "top5": TOP_5_WINNERS
     })

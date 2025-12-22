@@ -26,7 +26,12 @@ const handleLogin = () => {
     <div class="center-box">
         <h2>Identify Yourself</h2>
         <input v-model="username" placeholder="Enter Codename" @keyup.enter="handleLogin" />
-        <input v-if="showPassword" v-model="password" type="password" placeholder="Admin Password" @keyup.enter="handleLogin" />
+        <div v-if="showPassword">
+            <br>
+            <input  v-model="password" type="password" placeholder="Admin Password" @keyup.enter="handleLogin" />
+            <br><br>
+        </div>
+        
         <button @click="handleLogin">Connect</button>
     </div>
 </template>
