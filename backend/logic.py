@@ -67,8 +67,8 @@ QUESTIONS = {
         "func": func3,
         "test_cases": [5, 10, 15, 20, 25],
         "templates": {
-            "python": "def solve(n):\n    # Write your logic here\n    return []",
-            "c": "int* solve(int n) {\n     // Write your logic here\n     lis[n];\n   return lis;\n}"
+            "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
+            "c": "void solve(int n) {\n    // Print the sequence separated by spaces\n    // e.g. printf(\"%d \", val);\n}"
         }
     },
     4: {
@@ -79,8 +79,8 @@ QUESTIONS = {
         "func": func4,
         "test_cases": [10, 20, 30, 50, 100],
         "templates": {
-            "python": "def solve(n):\n    # Write your logic here\n    list = []\n    return list",
-            "c": "int* solve(int n)  {\n    // Write your logic here\n    lis[n];\n    return lis;\n}"
+            "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
+            "c": "void solve(int n) {\n    // Print the sequence separated by spaces\n    // e.g. printf(\"%d \", val);\n}"
         }   
     },
     5: {
@@ -91,8 +91,8 @@ QUESTIONS = {
         "func": func5,
         "test_cases": [5, 10, 20, 25, 30],
         "templates": {
-            "python": "def solve(n):\n    # Write your logic here\n    list = []\n    return list",
-            "c": "int* solve(int n) {\n    // Write your logic here\n    lis[n];\n    return lis;\n}"
+            "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
+            "c": "void solve(int n) {\n    // Print the sequence separated by spaces\n    // e.g. printf(\"%d \", val);\n}"
         }
     }
 }

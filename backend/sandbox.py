@@ -18,12 +18,16 @@ if __name__ == "__main__":
         input_str = sys.stdin.read().strip()
         if not input_str: exit()
         n = int(input_str)
-        if 'solve' in globals(): print(solve(n))
-        elif 'solution' in globals(): print(solution(n))
+        if 'solve' in globals(): 
+            ret = solve(n)
+            if ret is not None: print(ret)
+        elif 'solution' in globals(): 
+            ret = solution(n)
+            if ret is not None: print(ret)
     except Exception as e: print(f"Runtime Error: {e}")
 """
 
-C_HARNESS_BOTTOM = """
+C_HARNESS_INT = """
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -35,7 +39,19 @@ int main() {
 }
 """
 
-def run_docker(user_code, input_val, language='python'):
+C_HARNESS_VOID = """
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int n;
+    if (scanf("%d", &n) != 1) return 0;
+    solve(n);
+    return 0;
+}
+"""
+
+def run_docker(user_code, input_val, language='python', c_mode='int'):
     if not client: return "Error: Docker client not initialized"
 
     # 1. SETUP COMMANDS & CODE
@@ -50,8 +66,11 @@ def run_docker(user_code, input_val, language='python'):
         image = "gcc:latest" 
         filename = "script.c"
         # Compile, then run with input piping
-        run_cmd = "sh -c 'gcc /app/script.c -o /app/run && /app/run < /app/input.txt'"
-        full_code = "#include <stdio.h>\n" + user_code + "\n\n" + C_HARNESS_BOTTOM
+        run_cmd = "sh -c 'gcc /app/script.c -o /app/run -lm && /app/run < /app/input.txt'"
+        if c_mode == 'void':
+            full_code = "#include <stdio.h>\n#include <math.h>\n" + user_code + "\n\n" + C_HARNESS_VOID
+        else:
+            full_code = "#include <stdio.h>\n#include <math.h>\n" + user_code + "\n\n" + C_HARNESS_INT
 
     else:
         return "Error: Unsupported Language"

@@ -151,9 +151,26 @@ def submit():
 
     for test_val in test_cases:
         expected = config['func'](test_val)
-        actual = run_docker(user_code, test_val, language)
+        
+        # Determine C Mode based on expected output type
+        c_mode = 'int'
+        if isinstance(expected, list):
+            c_mode = 'void'
+            
+        actual = run_docker(user_code, test_val, language, c_mode=c_mode)
 
-        if str(actual).strip() == str(expected).strip():
+        # Normalize for comparison
+        def normalize(val):
+            s = str(val).strip()
+            # Remove brackets if present (Python list string)
+            if s.startswith('[') and s.endswith(']'):
+                s = s[1:-1]
+            # Replace commas with spaces
+            s = s.replace(',', ' ')
+            # Collapse whitespace
+            return " ".join(s.split())
+
+        if normalize(actual) == normalize(expected):
             passed_count += 1
             logs.append({"input": test_val, "status": "Pass"})
         else:
