@@ -17,17 +17,24 @@ const questions = ref([])
 const selectedQ = ref(null)
 const showGameOver = ref(false)
 const topWinners = ref([])
+const gameOverDismissed = ref(false)
 
 // --- POLLING FOR EVENT STATUS ---
 const checkEventStatus = async () => {
-    // Don't poll if we are already showing the modal or if we are admin
-    if (showGameOver.value || view.value === 'admin') return
+    // Don't poll if we are admin or login
+    if (view.value === 'admin' || view.value === 'login') return
 
     try {
         const res = await api.get('/event/status')
         if (res.data.ended) {
-            topWinners.value = res.data.top5
-            showGameOver.value = true
+            if (!gameOverDismissed.value) {
+                topWinners.value = res.data.top5
+                showGameOver.value = true
+            }
+        } else {
+            // Event is running (or reset)
+            showGameOver.value = false
+            gameOverDismissed.value = false
         }
     } catch (err) {
         console.error("Polling error", err)
@@ -130,7 +137,7 @@ const handleLogout = () => {
 
         <Admin v-else-if="view === 'admin'" />
 
-        <GameOverModal v-if="showGameOver" :winners="topWinners" />
+        <GameOverModal v-if="showGameOver && view !== 'login' && view !== 'admin'" :winners="topWinners" @close="showGameOver = false; gameOverDismissed = true" />
 
     </div>
 </template>

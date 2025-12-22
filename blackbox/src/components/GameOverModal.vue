@@ -1,5 +1,6 @@
 <script setup>
 defineProps(['winners'])
+defineEmits(['close'])
 </script>
 
 <template>
@@ -18,11 +19,29 @@ defineProps(['winners'])
                     </li>
                 </ul>
             </div>
+            <button class="dismiss-btn" @click="$emit('close')">Dismiss</button>
         </div>
     </div>
 </template>
 
 <style scoped>
+.dismiss-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #333;
+    color: #fff;
+    border: 1px solid #0f0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1em;
+    transition: all 0.3s;
+}
+
+.dismiss-btn:hover {
+    background: #0f0;
+    color: #000;
+}
+
 .modal-overlay {
     position: fixed;
     top: 0;

@@ -16,6 +16,20 @@ const endEvent = async () => {
         alert("Error ending event: " + (err.response?.data?.error || err.message))
     }
 }
+
+const startNewEvent = async () => {
+    if (!confirm("Are you sure? This will clear all user data and start a new event.")) return
+    
+    try {
+        await api.post('/admin/reset_event')
+        eventEnded.value = false
+        leaderboard.value = []
+        top3.value = []
+        alert("New event started!")
+    } catch (err) {
+        alert("Error starting new event: " + (err.response?.data?.error || err.message))
+    }
+}
 </script>
 
 <template>
@@ -27,6 +41,10 @@ const endEvent = async () => {
         </div>
 
         <div v-else class="results">
+            <div class="actions">
+                <button @click="startNewEvent" class="primary-btn">START NEW EVENT</button>
+            </div>
+
             <h3>🏆 Event Results</h3>
             
             <div class="top-3">
@@ -81,6 +99,21 @@ const endEvent = async () => {
 
 .danger-btn:hover {
     background: #cc0000;
+}
+
+.primary-btn {
+    background: #0f0;
+    color: #000;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.primary-btn:hover {
+    background: #00cc00;
 }
 
 .results {

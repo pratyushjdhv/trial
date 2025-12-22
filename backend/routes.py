@@ -280,6 +280,25 @@ def end_event():
         "top3": top3
     })
 
+@app.route('/admin/reset_event', methods=['POST'])
+def reset_event():
+    global EVENT_ENDED, TOP_5_WINNERS
+    
+    # 1. Reset Global State
+    EVENT_ENDED = False
+    TOP_5_WINNERS = []
+    
+    # 2. Clear Database
+    try:
+        db.session.query(ProbeLog).delete()
+        db.session.query(UserProgress).delete()
+        db.session.query(User).delete()
+        db.session.commit()
+        return jsonify({"message": "Event reset and database cleared successfully."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/event/status', methods=['GET'])
 def event_status():
     return jsonify({
