@@ -1,7 +1,7 @@
 from app import app
 from flask import request, jsonify
-from model import *
-from logic import *
+from model import db, User, UserProgress, ProbeLog
+from logic import QUESTIONS
 from datetime import datetime, timezone
 from sandbox import run_docker
 
@@ -60,7 +60,7 @@ def get_questions():
     return jsonify(questions)
 
 
-# --- NEW: PROBE ROUTE (User tests inputs against YOUR logic) ---
+# Probe Route: User tests inputs against logic
 @app.route('/probe', methods=['POST'])
 def probe():
     data = request.json
@@ -82,7 +82,6 @@ def probe():
     progress = UserProgress.query.filter_by(
         user_id=user_id, question_id=question_id).first()
 
-    # --- FIX STARTS HERE ---
     # Create progress entry if it's their first time
     if not progress:
         # Explicitly set probes_used=0 so Python knows it's an integer immediately
@@ -93,7 +92,6 @@ def probe():
         )
         db.session.add(progress)
         # We don't commit yet because we might update it below
-    # --- FIX ENDS HERE ---
 
     # Check if they have probes left
     if progress.probes_used >= config['max_probes']:
@@ -106,7 +104,7 @@ def probe():
         # Update counts
         progress.probes_used += 1
         
-        # --- NEW: Save to History Log ---
+        # Save to History Log
         new_log = ProbeLog(
             user_id=user_id,
             question_id=question_id,
@@ -114,7 +112,6 @@ def probe():
             output_val=str(expected_output)
         )
         db.session.add(new_log)
-        # --------------------------------
 
         db.session.commit()
 
@@ -124,10 +121,10 @@ def probe():
             "probes_left": config['max_probes'] - progress.probes_used
         })
     except Exception as e:
-            return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
-# --- NEW: SUBMIT ROUTE (Runs User Code in Docker) ---
+# Submit Route: Runs User Code in Docker
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.json
@@ -191,8 +188,7 @@ def submit():
         )
         db.session.add(progress)
 
-    # --- NEW SCORING FORMULA ---
-    # Formula: (10 * tests_passed) * (probes_left * 0.5) * base_points
+    # Scoring Formula: (10 * tests_passed) + (probes_left * 0.5 * base_points)
     
     # 1. Calculate Probes Left
     probes_left = max(0, config['max_probes'] - progress.probes_used)

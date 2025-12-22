@@ -4,7 +4,7 @@ import { ref, watch } from 'vue'
 const username = ref('')
 const password = ref('')
 const showPassword = ref(false)
-const emit = defineEmits(['join']) // Define custom event
+const emit = defineEmits(['join'])
 
 watch(username, (newVal) => {
     if (newVal.trim().toLowerCase() === 'admin') {

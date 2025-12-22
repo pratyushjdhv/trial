@@ -18,9 +18,8 @@ const showGameOver = ref(false)
 const topWinners = ref([])
 const gameOverDismissed = ref(false)
 
-// --- POLLING FOR EVENT STATUS ---
+// Polling for event status
 const checkEventStatus = async () => {
-    // Don't poll if we are admin or login
     if (view.value === 'admin' || view.value === 'login') return
 
     try {
@@ -31,7 +30,6 @@ const checkEventStatus = async () => {
                 showGameOver.value = true
             }
         } else {
-            // Event is running (or reset)
             showGameOver.value = false
             gameOverDismissed.value = false
         }
@@ -40,11 +38,9 @@ const checkEventStatus = async () => {
     }
 }
 
-// Start polling when app mounts
 onMounted(() => {
-    setInterval(checkEventStatus, 5000) // Check every 5 seconds
+    setInterval(checkEventStatus, 5000)
 
-    // Could check for existing session here
     const savedUser = localStorage.getItem('user_data')
     if (savedUser) {
         const data = JSON.parse(savedUser)
@@ -54,7 +50,6 @@ onMounted(() => {
     }
 })
 const handleJoin = async (credentials) => {
-    // Handle both object (new) and string (legacy) payloads
     const name = (credentials && typeof credentials === 'object') ? credentials.username : credentials
     const password = (credentials && typeof credentials === 'object') ? credentials.password : ''
 

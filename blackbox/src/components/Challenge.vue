@@ -15,8 +15,6 @@ const userCode = ref(props.question.templates?.python || '')
 // --- 2. THE WATCHER ---
 // Whenever 'language' changes, this runs automatically
 watch(language, (newLang) => {
-    // Optional: Only change if code is empty or matches the OTHER template 
-    // (to prevent overwriting user work), but for now, we force update.
     if (props.question.templates && props.question.templates[newLang]) {
         userCode.value = props.question.templates[newLang]
     }

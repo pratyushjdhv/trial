@@ -1,7 +1,5 @@
 <script setup>
-    // Props: Data passed down from parent
     defineProps(['questions'])
-    // Emits: Events sent up to parent
     defineEmits(['select'])
 </script>
 

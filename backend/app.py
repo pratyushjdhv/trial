@@ -14,7 +14,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
     
 
-from routes import *  # Import routes after app and db are set up
+import routes  # Import routes after app and db are set up
 
 if __name__ == '__main__':
     with app.app_context():

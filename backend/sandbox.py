@@ -5,8 +5,8 @@ import tempfile
 
 try:
     client = docker.from_env()
-except:
-    print("WARNING: Docker not found!")
+except Exception as e:
+    print(f"WARNING: Docker not found! {e}")
     client = None
 
 # --- HARNESSES ---
