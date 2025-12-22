@@ -54,7 +54,8 @@ def get_questions():
             "difficulty": config["difficulty"],
             "base_points": config["base_points"],
             "max_probes": config["max_probes"],
-            "description": config.get("description", "")
+            "description": config.get("description", ""),
+            "templates": config.get("templates", {})
         })
     return jsonify(questions)
 

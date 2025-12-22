@@ -9,26 +9,17 @@ const emit = defineEmits(['back'])
 // --- 1. LANGUAGE & TEMPLATES ---
 const language = ref('python')
 
-const TEMPLATES = {
-    python: `def solve(n):
-    # Write your logic here
-    return n`,
-    
-    c: `int solve(int n) {
-    // Write your logic here
-    return n;
-}`
-}
-
 // Initialize code with Python template
-const userCode = ref(TEMPLATES.python)
+const userCode = ref(props.question.templates?.python || '')
 
 // --- 2. THE WATCHER ---
 // Whenever 'language' changes, this runs automatically
 watch(language, (newLang) => {
     // Optional: Only change if code is empty or matches the OTHER template 
     // (to prevent overwriting user work), but for now, we force update.
-    userCode.value = TEMPLATES[newLang]
+    if (props.question.templates && props.question.templates[newLang]) {
+        userCode.value = props.question.templates[newLang]
+    }
 })
 
 // --- 3. EXISTING STATE ---
