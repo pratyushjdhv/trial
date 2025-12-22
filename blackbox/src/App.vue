@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import { onMounted } from 'vue'
-import axios from 'axios'
 import Login from './components/Login.vue'
 import Dashboard from './components/Dashboard.vue'
 import Challenge from './components/Challenge.vue'
@@ -120,7 +119,21 @@ const handleLogout = () => {
 <template>
     <div class="app-container">
         <header>
-            <h1>🔓 CRACK THE <span class="highlight">ENIGMA</span></h1>
+            <h1>
+                <svg version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"
+                    class="header-logo-svg">
+                    <g>
+                        <path class="st0"
+                            d="M378.625,209.465c-6.531-38.344-13.672-80-15.844-91.844c-5.313-28.906-43.375-45.063-71.656-24.234 c-14.828,10.938-28.094,11.719-35.125,11.719s-14.828,1.563-35.125-11.719c-29.391-19.219-66.344-4.672-71.656,24.234 c-2.172,11.844-9.313,53.5-15.844,91.844C53.906,219.418,0,238.778,0,261.012c0,32.438,114.625,58.719,256,58.719 c141.391,0,256-26.281,256-58.719C512,238.778,458.094,219.418,378.625,209.465z"
+                            fill="#f6f5f4"></path>
+                        <path class="st0"
+                            d="M109.125,330.45l7.547,86.515c39.563,6.719,79.734,10.219,119.703,11.078L256,401.278l19.625,26.765 c39.969-0.859,80.141-4.359,119.703-11.078l7.547-86.515c-48.375,9.359-97.906,13.5-146.875,13.5 C207.016,343.95,157.516,339.809,109.125,330.45z M186.688,401.997c-33.469-1.578-35.563-41.766-35.563-41.766l75.125,14.672 C226.25,374.903,220.156,403.59,186.688,401.997z M360.875,360.231c0,0-2.094,40.188-35.563,41.766 c-33.469,1.594-39.563-27.094-39.563-27.094L360.875,360.231z"
+                            fill="#f6f5f4"></path>
+                    </g>
+                </svg>
+                CRACK THE <span class="highlight">ENIGMA</span>
+            </h1>
 
             <div v-if="userId" class="user-info">
                 Agent: {{ username }}
@@ -137,7 +150,8 @@ const handleLogout = () => {
 
         <Admin v-else-if="view === 'admin'" />
 
-        <GameOverModal v-if="showGameOver && view !== 'login' && view !== 'admin'" :winners="topWinners" @close="showGameOver = false; gameOverDismissed = true" />
+        <GameOverModal v-if="showGameOver && view !== 'login' && view !== 'admin'" :winners="topWinners"
+            @close="showGameOver = false; gameOverDismissed = true" />
 
     </div>
 </template>
@@ -175,9 +189,21 @@ header {
     background: #555;
     border-color: #fff;
 }
+
+.header-logo-svg {
+    height: 1.5em;
+    width: 1.5em;
+    vertical-align: middle;
+    margin-right: 15px;
+    fill: #f6f5f4;
+    /* Ensure fill color works */
+}
+
 .highlight {
-    color: #0f0; /* Bright Hacker Green */
-    text-shadow: 0 0 5px #0f0; /* Glowing effect */
+    color: #0f0;
+    /* Bright Hacker Green */
+    text-shadow: 0 0 5px #0f0;
+    /* Glowing effect */
     font-weight: bold;
 }
 </style>

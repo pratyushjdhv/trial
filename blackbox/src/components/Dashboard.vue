@@ -7,7 +7,9 @@
 
 <template>
     <div class="dashboard">
-        <h2>Select Target</h2>
+        <h2>
+            <img src="/target.svg" alt="" class="target-icon">
+            Select Target</h2>
         <div class="grid">
             <div v-for="q in questions" :key="q.id" class="card level-card" @click="$emit('select', q)">
                 <div class="badge">{{ q.difficulty }}</div>
@@ -46,5 +48,10 @@
     font-size: 0.8em;
     display: inline-block;
     margin-bottom: 10px;
+}
+
+.target-icon {
+    height: 1.5em;
+    vertical-align: middle;
 }
 </style>

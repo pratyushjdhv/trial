@@ -29,6 +29,7 @@ class UserProgress(db.Model):
     
 
     tests_passed = db.Column(db.Integer, default=0) # Tracks how many hidden tests they passed
+    score_earned = db.Column(db.Integer, default=0) # Tracks the current score for this question
     solved_at = db.Column(db.DateTime) # Tracks LAST successful submission time
 
 

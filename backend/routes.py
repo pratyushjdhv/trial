@@ -2,7 +2,7 @@ from app import app
 from flask import request, jsonify
 from model import *
 from logic import *
-from datetime import datetime
+from datetime import datetime, timezone
 from sandbox import run_docker
 
 
@@ -168,55 +168,52 @@ def submit():
             question_id=question_id, 
             probes_used=0, 
             tests_passed=0,
-            is_solved=False
+            is_solved=False,
+            score_earned=0
         )
         db.session.add(progress)
 
-    score_change = 0
+    # --- NEW SCORING FORMULA ---
+    # Formula: (10 * tests_passed) * (probes_left * 0.5) * base_points
     
-    # CHECK: Did they improve their previous best?
-    # We update 'solved_at' ONLY if they improve their score.
-    # This acts as the tie-breaker: "Who reached this score FIRST?"
+    # 1. Calculate Probes Left
+    probes_left = max(0, config['max_probes'] - progress.probes_used)
+    
+    # 2. Calculate Multiplier
+    # If probes_left = 0, multiplier is 0.
+    # If probes_left = 1, multiplier is 0.5.
+    # If probes_left = 2, multiplier is 1.0.
+    probe_multiplier = probes_left * 0.5
+    
+    # 3. Calculate New Total Score for this Question
+    # We use the BEST passed_count achieved so far (or current if better)
+    best_passed = max(progress.tests_passed, passed_count)
+    
+    new_question_score = (10 * best_passed) + (probe_multiplier * config['base_points'])
+    new_question_score = int(new_question_score) # Ensure integer
+    
+    # 4. Calculate Delta (Change in score)
+    score_change = new_question_score - progress.score_earned
+    
+    # 5. Update Progress
     if passed_count > progress.tests_passed:
-        # Partial Scoring: 10 pts per new test passed
-        new_tests = passed_count - progress.tests_passed
-        points_per_test = 10 
-        
-        score_change += (new_tests * points_per_test)
-        
-        # Update Record
         progress.tests_passed = passed_count
-        progress.solved_at = datetime.utcnow() # Tie-breaker timestamp
-
-    # CHECK: Did they solve ALL tests? (Completion Bonus)
+        progress.solved_at = datetime.now(timezone.utc)
+        
     is_complete = (passed_count == len(test_cases))
-    
-    if is_complete and not progress.is_solved:
+    if is_complete:
         progress.is_solved = True
         
-        # --- BONUS SCORING (Updated) ---
-        # 1. Base Points (Difficulty)
-        score_change += config['base_points']
-
-        # 2. Probe Bonus (Reward for efficiency)
-        # 50 points per unused probe
-        probes_left = max(0, config['max_probes'] - progress.probes_used)
-        probe_bonus = probes_left * 50
-        
-        # 3. Time Bonus -> REMOVED per your request
-        # We rely on 'solved_at' for tie-breaking instead.
-        
-        score_change += probe_bonus
+    # 6. Update User Total Score
+    if score_change != 0:
+        user.total_score += score_change
+        progress.score_earned = new_question_score
         
         logs.append({
             "status": "Bonus", 
-            "msg": f"Base: {config['base_points']}, Probe Bonus: {probe_bonus}"
+            "msg": f"Score Update: {score_change:+d} pts (Total for Q: {new_question_score})"
         })
 
-    # Commit Score Updates
-    if score_change > 0:
-        user.total_score += score_change
-    
     db.session.commit()
 
     return jsonify({
