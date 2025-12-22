@@ -70,7 +70,7 @@ const handleJoin = async (credentials) => {
         const res = await api.post('/register', { username: name })
         username.value = name
         userId.value = res.data.id
-        
+
         localStorage.setItem('user_data', JSON.stringify({
             id: userId.value,
             username: username.value
@@ -85,7 +85,7 @@ const handleJoin = async (credentials) => {
 const loadDashboard = async () => {
     try {
         const res = await api.get('/questions')
-        
+
         questions.value = res.data
         view.value = 'dashboard'
     } catch (err) {
@@ -113,7 +113,8 @@ const handleLogout = () => {
 <template>
     <div class="app-container">
         <header>
-            <h1>🕵️ BLACK BOX OS</h1>
+            <h1>🔓 CRACK THE <span class="highlight">ENIGMA</span></h1>
+
             <div v-if="userId" class="user-info">
                 Agent: {{ username }}
                 <button @click="handleLogout" class="logout-btn">Logout</button>
@@ -166,5 +167,10 @@ header {
 .logout-btn:hover {
     background: #555;
     border-color: #fff;
+}
+.highlight {
+    color: #0f0; /* Bright Hacker Green */
+    text-shadow: 0 0 5px #0f0; /* Glowing effect */
+    font-weight: bold;
 }
 </style>
