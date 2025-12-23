@@ -198,7 +198,7 @@ def submit():
     # If probes_left = 0, multiplier is 0.
     # If probes_left = 1, multiplier is 0.5.
     # If probes_left = 2, multiplier is 1.0.
-    probe_multiplier = probes_left * 0.5
+    probe_multiplier = probes_left * 0.25
     
     # 3. Calculate New Total Score for this Question
     # We use the BEST passed_count achieved so far (or current if better)
