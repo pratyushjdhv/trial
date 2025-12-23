@@ -1,12 +1,13 @@
-from app import app
-from flask import request, jsonify
+from flask import Blueprint, request, jsonify
 from model import db, User, UserProgress, ProbeLog
 from logic import QUESTIONS
 from datetime import datetime, timezone
 from sandbox import run_docker
 
+bp = Blueprint('main', __name__)
 
-@app.route('/register', methods=['POST'])
+
+@bp.route('/register', methods=['POST'])
 def register():
     data = request.json
     username = data.get('username')
@@ -35,7 +36,7 @@ def register():
     })
 
 
-@app.route('/users', methods=['GET'])
+@bp.route('/users', methods=['GET'])
 def get_users():
     users = User.query.all()
     # Convert the list of objects into a list of JSON dictionaries
@@ -44,7 +45,7 @@ def get_users():
     return jsonify(result)
 
 
-@app.route('/questions', methods=['GET'])
+@bp.route('/questions', methods=['GET'])
 def get_questions():
 
     questions = []
@@ -61,7 +62,7 @@ def get_questions():
 
 
 # Probe Route: User tests inputs against logic
-@app.route('/probe', methods=['POST'])
+@bp.route('/probe', methods=['POST'])
 def probe():
     data = request.json
     user_id = data.get('user_id')
@@ -125,7 +126,7 @@ def probe():
 
 
 # Submit Route: Runs User Code in Docker
-@app.route('/submit', methods=['POST'])
+@bp.route('/submit', methods=['POST'])
 def submit():
     data = request.json
     user_id = data.get('user_id')
@@ -238,7 +239,7 @@ def submit():
         "details": logs
     })
 
-@app.route('/get_progress', methods=['POST'])
+@bp.route('/get_progress', methods=['POST'])
 def get_progress():
     data = request.json
     user_id = data.get('user_id')
@@ -263,7 +264,7 @@ def get_progress():
 EVENT_ENDED = False
 TOP_5_WINNERS = []
 
-@app.route('/admin/end_event', methods=['POST'])
+@bp.route('/admin/end_event', methods=['POST'])
 def end_event():
     global EVENT_ENDED, TOP_5_WINNERS
     
@@ -291,7 +292,7 @@ def end_event():
         "top3": top3
     })
 
-@app.route('/admin/reset_event', methods=['POST'])
+@bp.route('/admin/reset_event', methods=['POST'])
 def reset_event():
     global EVENT_ENDED, TOP_5_WINNERS
     
@@ -310,7 +311,7 @@ def reset_event():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@app.route('/event/status', methods=['GET'])
+@bp.route('/event/status', methods=['GET'])
 def event_status():
     return jsonify({
         "ended": EVENT_ENDED,

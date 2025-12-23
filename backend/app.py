@@ -14,7 +14,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
     
 
-import routes  # Import routes after app and db are set up
+from routes import bp
+app.register_blueprint(bp)
 
 if __name__ == '__main__':
     with app.app_context():
