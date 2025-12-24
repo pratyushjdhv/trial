@@ -190,15 +190,25 @@ def submit():
         db.session.add(progress)
 
     # Scoring Formula: (10 * tests_passed) + (probes_left * 0.5 * base_points)
-    
+
     # 1. Calculate Probes Left
     probes_left = max(0, config['max_probes'] - progress.probes_used)
     
     # 2. Calculate Multiplier
-    # If probes_left = 0, multiplier is 0.
-    # If probes_left = 1, multiplier is 0.5.
-    # If probes_left = 2, multiplier is 1.0.
-    probe_multiplier = probes_left * 0.25
+    # Logic: Allow full points if 1 probe is used (probes_left = max - 1)
+    question = progress.question_id
+    probe_multiplier = 0.0
+    
+    if question in [1, 2]:
+        probe_multiplier = probes_left * 0.25
+    elif question in [3, 4]:
+        probe_multiplier = probes_left * 0.167
+    elif question == 5:
+        probe_multiplier = probes_left * 0.12
+        
+    # Ensure it doesn't exceed 1.0 (base points)
+    probe_multiplier = min(1.0, probe_multiplier)
+
     
     # 3. Calculate New Total Score for this Question
     # We use the BEST passed_count achieved so far (or current if better)
