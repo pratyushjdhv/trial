@@ -1,6 +1,21 @@
 <script setup>
+    import { onMounted, onUnmounted } from 'vue';
     defineProps(['questions'])
     defineEmits(['select'])
+
+    const updateCursor = (e) => {
+        const cards = document.querySelectorAll('.level-card');
+        cards.forEach(card => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            card.style.setProperty('--x', `${x}px`);
+            card.style.setProperty('--y', `${y}px`);
+        });
+    }
+
+    onMounted(() => window.addEventListener('pointermove', updateCursor));
+    onUnmounted(() => window.removeEventListener('pointermove', updateCursor));
 </script>
 
 <template>
@@ -30,8 +45,33 @@
     border: 1px solid #444;
     padding: 20px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: border-color 0.2s;
     color: #0f0;
+    position: relative;
+    overflow: hidden;
+}
+
+.level-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(800px circle at var(--x) var(--y), rgba(0, 255, 0, 0.15), transparent 40%);
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.level-card:hover::before {
+    opacity: 1;
+}
+
+.level-card > * {
+    position: relative;
+    z-index: 2;
 }
 
 .level-card:hover {
