@@ -159,7 +159,16 @@ def submit():
 
         # Normalize for comparison
         def normalize(val):
+            # Handle Booleans explicitly (Python logic returns bool, C returns 1/0)
+            if isinstance(val, bool):
+                return "1" if val else "0"
+
             s = str(val).strip()
+            
+            # Handle stringified booleans
+            if s == "True": return "1"
+            if s == "False": return "0"
+
             # Remove brackets if present (Python list string)
             if s.startswith('[') and s.endswith(']'):
                 s = s[1:-1]
@@ -228,17 +237,17 @@ def submit():
     is_complete = (passed_count == len(test_cases))
     if is_complete:
         progress.is_solved = True
-        
-    # 6. Update User Total Score
-    if score_change != 0:
-        user.total_score += score_change
-        progress.score_earned = new_question_score
-        
-        logs.append({
-            "status": "Bonus", 
-            "msg": f"Score Update: {score_change:+d} pts (Total for Q: {new_question_score})"
-        })
 
+    if progress.tests_passed > 0:
+        # 6. Update User Total Score
+        if score_change != 0:
+            user.total_score += score_change
+            progress.score_earned = new_question_score
+            
+            logs.append({
+                "status": "Bonus", 
+                "msg": f"Score Update: {score_change:+d} pts (Total for Q: {new_question_score})"
+            })
     db.session.commit()
 
     return jsonify({

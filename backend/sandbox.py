@@ -67,10 +67,14 @@ def run_docker(user_code, input_val, language='python', c_mode='int'):
         filename = "script.c"
         # Compile, then run with input piping
         run_cmd = "sh -c 'gcc /app/script.c -o /app/run -lm && /app/run < /app/input.txt'"
+        
+        # Add common defines for compatibility
+        header = "#include <stdio.h>\n#include <math.h>\n#include <stdbool.h>\n#define TRUE 1\n#define FALSE 0\n#define True 1\n#define False 0\n"
+
         if c_mode == 'void':
-            full_code = "#include <stdio.h>\n#include <math.h>\n" + user_code + "\n\n" + C_HARNESS_VOID
+            full_code = header + user_code + "\n\n" + C_HARNESS_VOID
         else:
-            full_code = "#include <stdio.h>\n#include <math.h>\n" + user_code + "\n\n" + C_HARNESS_INT
+            full_code = header + user_code + "\n\n" + C_HARNESS_INT
 
     else:
         return "Error: Unsupported Language"

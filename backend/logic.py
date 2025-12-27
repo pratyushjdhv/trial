@@ -3,7 +3,10 @@ def func1(n):
     return n * 2
 
 def func2(n):
-    return n * n
+    if n%2 == 0:
+        return True
+    else:
+        return False
 
 def func3(n):
     a, b = 0, 1
@@ -41,7 +44,7 @@ QUESTIONS = {
         "description": "A simple linear multiplication.",
         "func": func1,
         # HIDDEN TESTS: The user code must pass ALL of these to win
-        "test_cases": [10, 0, -5, 100, 79],
+        "test_cases": [10, 69, -5, 100, 79],
         "templates": {
             "python": "def solve(n):\n    # Write your logic here\n    return n",
             "c": "int solve(int n) {\n    // Write your logic here\n    return n;\n}"
@@ -51,12 +54,12 @@ QUESTIONS = {
         "difficulty": "Easy",
         "base_points": 100,
         "max_probes": 5,
-        "description": "A single variable quadratic function.",
+        "description": "even or odd checker.",
         "func": func2,
-        "test_cases": [-5, 12, 20, 0, 101],
+        "test_cases": [-5, 12, 20, 35, 101],
         "templates": {
-            "python": "def solve(n):\n    # Write your logic here\n    return n",
-            "c": "int solve(int n) {\n    // Write your logic here\n    return n;\n}"
+            "python": "def solve(n):\n    # Write your logic here\n    return value",
+            "c": "int solve(int n) {\n    // Write your logic here\n    return value;\n}"
         }
     },
     3: {
