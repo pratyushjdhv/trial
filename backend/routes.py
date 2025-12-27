@@ -287,22 +287,46 @@ TOP_5_WINNERS = []
 def end_event():
     global EVENT_ENDED, TOP_5_WINNERS
     
-    # 1. Get all users ordered by total score (descending)
-    users = User.query.order_by(User.total_score.desc()).all()
-    
-    # 2. Prepare Leaderboard Data
-    leaderboard = []
+    # 1. Get all users
+    users = User.query.all()
+
+    # 2. Calculate Last Solved Time for Tie-Breaking
+    user_stats = []
     for u in users:
+        # Find the latest 'solved_at' time from all their progress
+        # If they have no progress or no solved_at, use a default old time (or max time if we want them last)
+        # Actually, for tie-breaking, "lesser time" (earlier) is better.
+        # If they haven't solved anything, their score is 0, so they are at the bottom anyway.
+        
+        valid_times = [p.solved_at for p in u.progress if p.solved_at]
+        last_solved = max(valid_times) if valid_times else datetime.max
+
+        user_stats.append({
+            "user": u,
+            "score": u.total_score,
+            "last_solved": last_solved
+        })
+
+    # 3. Sort: Primary = Score (Desc), Secondary = Time (Asc)
+    # We use a tuple for sorting. Python sorts tuples element by element.
+    # We want Score DESC, so we use -score.
+    # We want Time ASC, so we use time directly.
+    user_stats.sort(key=lambda x: (-x["score"], x["last_solved"]))
+    
+    # 4. Prepare Leaderboard Data
+    leaderboard = []
+    for stat in user_stats:
+        u = stat["user"]
         leaderboard.append({
             "id": u.id,
             "username": u.username,
             "total_score": u.total_score
         })
     
-    # 3. Get Top 3
+    # 5. Get Top 3
     top3 = leaderboard[:3]
     
-    # 4. Set Global State
+    # 6. Set Global State
     EVENT_ENDED = True
     TOP_5_WINNERS = leaderboard[:5] # Store Top 5 for the modal
     
