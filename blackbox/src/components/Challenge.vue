@@ -193,7 +193,7 @@ const submitCode = async () => {
 .panel {
     background: #222;
     border: 1px solid #333;
-    padding: 20px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
 }
@@ -213,6 +213,16 @@ const submitCode = async () => {
     color: #fff;
     margin: 10px 0;
     font-family: monospace;
+    min-height: 150px;
+}
+
+.logs-box {
+    margin-top: 10px;
+    max-height: 180px;
+    overflow-y: auto;
+    background: #000;
+    padding: 10px;
+    border: 1px solid #333;
 }
 
 .submit-btn {
