@@ -23,7 +23,13 @@ const checkEventStatus = async () => {
     if (view.value === 'admin' || view.value === 'login') return
 
     try {
-        const res = await api.get('/event/status')
+        const res = await api.get(`/event/status?user_id=${userId.value}`)
+        
+        if (res.data.valid_user === false) {
+            handleLogout()
+            return
+        }
+
         if (res.data.ended) {
             if (!gameOverDismissed.value) {
                 topWinners.value = res.data.top5

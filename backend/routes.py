@@ -356,7 +356,17 @@ def reset_event():
 
 @bp.route('/event/status', methods=['GET'])
 def event_status():
+    user_id = request.args.get('user_id')
+    is_valid_user = True
+    
+    if user_id and user_id != 'admin':
+        # Check if user exists in DB
+        user = User.query.get(user_id)
+        if not user:
+            is_valid_user = False
+
     return jsonify({
         "ended": EVENT_ENDED,
-        "top5": TOP_5_WINNERS
+        "top5": TOP_5_WINNERS,
+        "valid_user": is_valid_user
     })
