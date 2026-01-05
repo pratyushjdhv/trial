@@ -7,6 +7,27 @@ def easy2(n):
         return True
     else:
         return False
+    
+def easy3(n):
+    n = abs(n)
+    total = 0
+    while n > 0:
+        total += n % 10
+        n //= 10
+    return total
+
+def easy4(n):
+    if n == 0:
+        return 1
+
+    n = abs(n)
+    count = 0
+    while n > 0:
+        count += 1
+        n //= 10
+    return count
+
+
 
 def med1(n):
     a, b = 0, 1
@@ -26,6 +47,15 @@ def med2(n):
             lis.append(i)
     return lis
 
+def med3(n):
+    total = 0
+    lis = []
+    for i in range(1, n + 1):
+        total += i
+        lis.append(total)
+    return lis
+
+
 def hard1(n):
     lis = []
     for i in range(n):
@@ -34,6 +64,38 @@ def hard1(n):
         else:
             lis.append(i ** 3)
     return lis
+
+def hard2(n):
+    lis = [1]
+    value = 1
+    for i in range(1, n):
+        if i % 2 == 1:
+            value *= 2
+        else:
+            value += i
+        lis.append(value)
+    return lis
+
+def hard3(n):
+    lis = []
+    for i in range(1, n + 1):
+        temp = i
+        has_five = False
+
+        while temp > 0:
+            if temp % 10 == 5:
+                has_five = True
+                break
+            temp //= 10
+
+        if has_five:
+            lis.append(-i)
+        else:
+            lis.append(i)
+
+    return lis
+
+
 
 
 QUESTIONS = {
@@ -63,6 +125,30 @@ QUESTIONS = {
         }
     },
     3: {
+        "difficulty": "Easy",
+        "base_points": 100,
+        "max_probes": 5,
+        "description": "The system reacts to the internal structure of the multi-digit numbers.(try number like 123)",
+        "func": easy3,
+        "test_cases": [-567, 123, 101, 69, 202],
+        "templates": {
+            "python": "def solve(n):\n    # Write your logic here\n    return value",
+            "c": "int solve(int n) {\n    // Write your logic here\n    return value;\n}"
+        }
+    },
+    4: {
+        "difficulty": "Easy",
+        "base_points": 100,
+        "max_probes": 5,
+        "description": "The system reacts to the internal structure of the multi-digit numbers.(try number like 12345)",
+        "func": easy4,
+        "test_cases": [-56789, 1009, 101, 69, 0000],
+        "templates": {
+            "python": "def solve(n):\n    # Write your logic here\n    return value",
+            "c": "int solve(int n) {\n    // Write your logic here\n    return value;\n}"
+        }
+    },
+    5: {
         "difficulty": "Medium",
         "base_points": 200,
         "max_probes": 7,
@@ -74,7 +160,7 @@ QUESTIONS = {
             "c": "void solve(int n) {\n    // Print the sequence separated by spaces\n    // e.g. printf(\"%d \", val);\n}"
         }
     },
-    4: {
+    6: {
         "difficulty": "Medium",
         "base_points": 200,
         "max_probes": 7,
@@ -86,13 +172,50 @@ QUESTIONS = {
             "c": "void solve(int n) {\n    // Print the sequence separated by spaces\n    // e.g. printf(\"%d \", val);\n}"
         }   
     },
-    5: {
+    7: {
+        "difficulty": "Medium",
+        "base_points": 200,
+        "max_probes": 7,
+        "description": "Observe the output carefully; it keeps building up.",
+        "func": med3,
+        "test_cases": [10, 2, 6, 12, 8],
+        "templates": {
+            "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
+            "c": "void solve(int n) {\n    // Print the sequence separated by spaces\n    // e.g. printf(\"%d \", val);\n}"
+        }   
+    },
+
+    8: {
         "difficulty": "Hard",
         "base_points": 300,
         "max_probes": 10,
         "description": "Position matters. Rules change as the sequence grows.",
         "func": hard1,
         "test_cases": [5, 10, 20, 25, 30],
+        "templates": {
+            "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
+            "c": "void solve(int n) {\n    // Print the sequence separated by spaces\n    // e.g. printf(\"%d \", val);\n}"
+        }
+    },
+    9: {
+        "difficulty": "Hard",
+        "base_points": 300,
+        "max_probes": 10,
+        "description": "Past influences the future.",
+        "func": hard2,
+        "test_cases": [5, 10, 8, 3, 0],
+        "templates": {
+            "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
+            "c": "void solve(int n) {\n    // Print the sequence separated by spaces\n    // e.g. printf(\"%d \", val);\n}"
+        }
+    },
+    10: {
+        "difficulty": "Hard",
+        "base_points": 300,
+        "max_probes": 10,
+        "description": "Certain inputs cause err in system behavior.",
+        "func": hard3,
+        "test_cases": [10, 15, 20, 55, 100],
         "templates": {
             "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
             "c": "void solve(int n) {\n    // Print the sequence separated by spaces\n    // e.g. printf(\"%d \", val);\n}"

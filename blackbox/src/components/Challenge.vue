@@ -157,8 +157,8 @@ const submitCode = async () => {
                 <div v-if="submitLogs.length" class="logs-box">
                     <h4>Results:</h4>
                     <div v-for="(log, i) in submitLogs" :key="i" :class="['log-item', log.status]">
-                        <span v-if="log.status === 'Pass'">✅ Input {{ log.input }}: Passed</span>
-                        <span v-else-if="log.status === 'Fail'">❌ Input {{ log.input }}: Expected Hidden, Got "{{ log.got }}"</span>
+                        <span v-if="log.status === 'Pass'">✅ Input {{ i }}: Passed</span>
+                        <span v-else-if="log.status === 'Fail'">❌ Input {{ i }}: Expected Hidden, Got "{{ log.got }}"</span>
                         <span v-else-if="log.status === 'Bonus'">✨ {{ log.msg }}</span>
                     </div>
                 </div>
