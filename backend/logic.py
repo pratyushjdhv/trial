@@ -1,14 +1,14 @@
 
-def func1(n):
+def easy1(n):
     return n * 2
 
-def func2(n):
+def easy2(n):
     if n%2 == 0:
         return True
     else:
         return False
 
-def func3(n):
+def med1(n):
     a, b = 0, 1
     lis = []
     for i in range(n):
@@ -16,7 +16,7 @@ def func3(n):
         a, b = b, a + b
     return lis
 
-def func4(n):
+def med2(n):
     lis = []
     for i in range(2, n):
         for j in range(2, int(i**0.5) + 1):
@@ -26,7 +26,7 @@ def func4(n):
             lis.append(i)
     return lis
 
-def func5(n):
+def hard1(n):
     lis = []
     for i in range(n):
         if i % 2 == 0:
@@ -41,7 +41,7 @@ QUESTIONS = {
         "difficulty": "Easy",
         "base_points": 100,
         "max_probes": 5,
-        "description": "A simple linear multiplication.",
+        "description": "The machine responds predictably. Discover the pattern.",
         "func": func1,
         # HIDDEN TESTS: The user code must pass ALL of these to win
         "test_cases": [10, 69, -5, 100, 79],
@@ -54,7 +54,7 @@ QUESTIONS = {
         "difficulty": "Easy",
         "base_points": 100,
         "max_probes": 5,
-        "description": "even or odd checker.",
+        "description": "The output belongs to one of two possible categories.",
         "func": func2,
         "test_cases": [-5, 12, 20, 35, 101],
         "templates": {
@@ -66,7 +66,7 @@ QUESTIONS = {
         "difficulty": "Medium",
         "base_points": 200,
         "max_probes": 7,
-        "description": "Fibonacci sequence upto n.",
+        "description": "The system reveals a growing sequence.",
         "func": func3,
         "test_cases": [5, 10, 15, 20, 25],
         "templates": {
@@ -78,7 +78,7 @@ QUESTIONS = {
         "difficulty": "Medium",
         "base_points": 200,
         "max_probes": 7,
-        "description": "Generate prime numbers up to n.",
+        "description": "Only certain numbers are accepted by the system.",
         "func": func4,
         "test_cases": [10, 20, 30, 50, 100],
         "templates": {
@@ -90,7 +90,7 @@ QUESTIONS = {
         "difficulty": "Hard",
         "base_points": 300,
         "max_probes": 10,
-        "description": "Generate a list of squares/cubes based on even/odd index rules.",
+        "description": "Position matters. Rules change as the sequence grows.",
         "func": func5,
         "test_cases": [5, 10, 20, 25, 30],
         "templates": {

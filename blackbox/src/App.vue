@@ -133,7 +133,7 @@ const handleLogout = () => {
                             fill="#f6f5f4"></path>
                     </g>
                 </svg>
-                CRACK THE <span class="highlight">ENIGMA</span>
+                DECODE THE <span class="highlight">BLACKBOX</span>
             </h1>
 
             <div v-if="userId" class="user-info">
