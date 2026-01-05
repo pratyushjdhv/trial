@@ -42,7 +42,7 @@ QUESTIONS = {
         "base_points": 100,
         "max_probes": 5,
         "description": "The machine responds predictably. Discover the pattern.",
-        "func": func1,
+        "func": easy1,
         # HIDDEN TESTS: The user code must pass ALL of these to win
         "test_cases": [10, 69, -5, 100, 79],
         "templates": {
@@ -55,7 +55,7 @@ QUESTIONS = {
         "base_points": 100,
         "max_probes": 5,
         "description": "The output belongs to one of two possible categories.",
-        "func": func2,
+        "func": easy2,
         "test_cases": [-5, 12, 20, 35, 101],
         "templates": {
             "python": "def solve(n):\n    # Write your logic here\n    return value",
@@ -67,7 +67,7 @@ QUESTIONS = {
         "base_points": 200,
         "max_probes": 7,
         "description": "The system reveals a growing sequence.",
-        "func": func3,
+        "func": med1,
         "test_cases": [5, 10, 15, 20, 25],
         "templates": {
             "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
@@ -79,7 +79,7 @@ QUESTIONS = {
         "base_points": 200,
         "max_probes": 7,
         "description": "Only certain numbers are accepted by the system.",
-        "func": func4,
+        "func": med2,
         "test_cases": [10, 20, 30, 50, 100],
         "templates": {
             "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
@@ -91,7 +91,7 @@ QUESTIONS = {
         "base_points": 300,
         "max_probes": 10,
         "description": "Position matters. Rules change as the sequence grows.",
-        "func": func5,
+        "func": hard1,
         "test_cases": [5, 10, 20, 25, 30],
         "templates": {
             "python": "def solve(n):\n    # Return a list OR print the sequence\n    return []",
