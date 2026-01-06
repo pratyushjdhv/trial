@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
 from model import db, User, UserProgress, ProbeLog
-from logic import QUESTIONS
+from logic import QUESTIONS, TIE_BREAKER_QUESTIONS
 from datetime import datetime, timezone
 from sandbox import run_docker
 
 bp = Blueprint('main', __name__)
+
+TIE_BREAKER_MODE = False
 
 
 @bp.route('/register', methods=['POST'])
@@ -47,9 +49,11 @@ def get_users():
 
 @bp.route('/questions', methods=['GET'])
 def get_questions():
+    global TIE_BREAKER_MODE
+    target_questions = TIE_BREAKER_QUESTIONS if TIE_BREAKER_MODE else QUESTIONS
 
     questions = []
-    for q_id, config in QUESTIONS.items():
+    for q_id, config in target_questions.items():
         questions.append({
             "id": q_id,
             "difficulty": config["difficulty"],
@@ -75,7 +79,7 @@ def probe():
     except (ValueError, TypeError):
         return jsonify({"error": "Input must be a valid integer"}), 400
 
-    config = QUESTIONS.get(question_id)
+    config = QUESTIONS.get(question_id) or TIE_BREAKER_QUESTIONS.get(question_id)
     if not config:
         return jsonify({"error": "Invalid Question ID"}), 404
 
@@ -138,7 +142,7 @@ def submit():
         return jsonify({"error": "No code provided"}), 400
 
     # 1. Get Config
-    config = QUESTIONS.get(question_id)
+    config = QUESTIONS.get(question_id) or TIE_BREAKER_QUESTIONS.get(question_id)
     if not config:
         return jsonify({"error": "Invalid Question"}), 404
 
@@ -208,7 +212,7 @@ def submit():
     question = progress.question_id
     probe_multiplier = 0.0
     
-    if question in [1, 2]:
+    if question in [1, 2, 101]:
         probe_multiplier = probes_left * 0.25
     elif question in [3, 4]:
         probe_multiplier = probes_left * 0.167
@@ -337,11 +341,12 @@ def end_event():
 
 @bp.route('/admin/reset_event', methods=['POST'])
 def reset_event():
-    global EVENT_ENDED, TOP_5_WINNERS
+    global EVENT_ENDED, TOP_5_WINNERS, TIE_BREAKER_MODE
     
     # 1. Reset Global State
     EVENT_ENDED = False
     TOP_5_WINNERS = []
+    TIE_BREAKER_MODE = False
     
     # 2. Clear Database
     try:
@@ -350,6 +355,26 @@ def reset_event():
         db.session.query(User).delete()
         db.session.commit()
         return jsonify({"message": "Event reset and database cleared successfully."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@bp.route('/admin/start_tiebreaker', methods=['POST'])
+def start_tiebreaker():
+    global EVENT_ENDED, TOP_5_WINNERS, TIE_BREAKER_MODE
+    
+    # 1. Reset Global State
+    EVENT_ENDED = False
+    TOP_5_WINNERS = []
+    TIE_BREAKER_MODE = True
+    
+    # 2. Clear Database
+    try:
+        db.session.query(ProbeLog).delete()
+        db.session.query(UserProgress).delete()
+        db.session.query(User).delete()
+        db.session.commit()
+        return jsonify({"message": "Tie breaker started and database cleared successfully."})
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -368,5 +393,6 @@ def event_status():
     return jsonify({
         "ended": EVENT_ENDED,
         "top5": TOP_5_WINNERS,
-        "valid_user": is_valid_user
+        "valid_user": is_valid_user,
+        "tie_breaker": TIE_BREAKER_MODE
     })

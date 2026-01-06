@@ -140,6 +140,20 @@ const startNewEvent = async () => {
         alert("Error starting new event: " + (err.response?.data?.error || err.message))
     }
 }
+
+const startTieBreaker = async () => {
+    if (!confirm("Are you sure? This will clear all user data and start Tie Breaker Mode.")) return
+    
+    try {
+        await api.post('/admin/start_tiebreaker')
+        eventEnded.value = false
+        leaderboard.value = []
+        top3.value = []
+        alert("Tie Breaker round started!")
+    } catch (err) {
+        alert("Error starting tie breaker: " + (err.response?.data?.error || err.message))
+    }
+}
 </script>
 
 <template>
@@ -155,6 +169,7 @@ const startNewEvent = async () => {
             <div v-else class="results">
                 <div class="actions">
                     <button @click="startNewEvent" class="primary-btn">START NEW EVENT</button>
+                    <button @click="startTieBreaker" class="warning-btn">START TIE BREAKER</button>
                 </div>
 
                 <h3>🏆 Event Results</h3>
@@ -237,6 +252,27 @@ const startNewEvent = async () => {
 
 .primary-btn:hover {
     background: #00cc00;
+}
+
+.warning-btn {
+    background: #ffa500;
+    color: #000;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.warning-btn:hover {
+    background: #ff8c00;
+}
+
+.actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
 }
 
 .results {

@@ -231,3 +231,30 @@ def run_host_logic(q_id, user_input):
     if not config:
         return None
     return config["func"](user_input)
+
+def tie_breaker_logic(n):
+    # Logic: Return the sum of even digits multiplied by 3
+    # e.g. 1234 -> (2+4)*3 = 18
+    n = abs(n)
+    total = 0
+    while n > 0:
+        digit = n % 10
+        if digit % 2 == 0:
+            total += digit
+        n //= 10
+    return total * 3
+
+TIE_BREAKER_QUESTIONS = {
+    101: {
+        "difficulty": "Tie Breaker",
+        "base_points": 500,
+        "max_probes": 5,
+        "description": "Final Showdown: Even digits hold the power.",
+        "func": tie_breaker_logic,
+        "test_cases": [1234, 2468, 1357, 1020, 888],
+        "templates": {
+            "python": "def solve(n):\n    # Write your logic here\n    return 0",
+            "c": "int solve(int n) {\n    // Write your logic here\n    return 0;\n}"
+        }
+    }
+}
