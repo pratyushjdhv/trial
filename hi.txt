@@ -1,0 +1,20 @@
+test.py
+
+sudo apt-get install iperf3   # Debian/Ubuntu
+
+# 2. Start a server on another machine in the same Wi‑Fi network
+iperf3 -s
+
+# 3. Run the tester
+python wifi_test.py --server 192.168.1.10 --streams 200
+
+machinetest.py
+
+pip install requests psutil
+
+# Run the tester against your local server
+python machine_test.py \
+    --url http://localhost:5000 \
+    --ramp 1.5 \
+    --latency 4 \
+    --max-errors 5
